@@ -1,0 +1,20 @@
+{
+    "name": "tatetian.github.io-terminal",
+    "version": "0.0.1",
+    "description": "Terminal as topbar for pages of tatetian.io",
+    "main": "terminal.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "devDependencies": {
+        "term.js": "~0.0.4",
+        "chalk": "~1.1.0",
+        "browserify": "~9.0.3",
+        "watchify": "~2.4.0",
+        "uglify-js": "~2.4.15",
+        "clean-css": "~2.2.15",
+        "jshint": "^2.5.6"
+    },
+    "author": "Tate, Tian Hongliang",
+    "license": "MIT"
+}
