@@ -1,5 +1,5 @@
 /*
- *
+ * A read-only file system, which supports only one command--- `ls`.
  **/
 
 var INode = function(name) {
@@ -39,19 +39,35 @@ INode.loadFromJson = function(json){
     return inode;
 };
 
-INode.getByPath = function(path) {
-    var parts = path.split('/');
-
+// TODO: read the JSON from a separate file; can browserify support readFileSync?
+var nodesJson = {
+    "name": "~",
+    "nodes": [
+        {
+            "name": "posts",
+            "nodes": [
+                {"name": "2015-01-05-why"},
+                {"name": "2015-07-05-ssh"}
+            ]
+        },
+        {
+            "name": "projects",
+            "nodes": [
+                {"name": "pseudocode.js"},
+                {"name": "PaperClub"}
+            ]
+        },
+        {"name": "index.html"},
+        {"name": "about.html"}
+    ]
 };
 
-
-var rootNode = INode.loadFromJson(JSON.parse(
-                    require("fs").readFileSync('./fs.json', 'utf8')));
+// var rootNode = INode.loadFromJson(JSON.parse(
+                    // require("fs").readFileSync(__dirname + '/fs.json', 'utf8')));
+var rootNode = INode.loadFromJson(nodesJson);
 var cwdNode = rootNode;
 
 function getINodeByPath(path) {
-    console.log('get inode of path ' + path);
-
     path = path.trim();
     if (!path || path === '') return null;
 
@@ -75,6 +91,7 @@ function getINodeByPath(path) {
         if (partName === '..') {
             resNode = resNode.parent;
             if (resNode === null) return null;
+            else continue;
         }
 
         var children = resNode.children;
@@ -98,6 +115,8 @@ function getINodeByPath(path) {
 var fs = {};
 
 fs.ls = function(dir) {
+    if (!dir || dir.trim() === '') dir = '.';
+
     var inode = getINodeByPath(dir);
     if (!inode) return {err: 'No such file or directory'};
 
