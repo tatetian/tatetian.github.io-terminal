@@ -6,7 +6,7 @@ var readline = require('./lib/readline.js');
 var fs = require('./src/fs.js');
 
 var Terminal = function(parentEl, options) {
-    var term = new Term(options);
+    var term = this._term = new Term(options);
     term.open(parentEl);
     var kb = new TermKeyboard(term);
     var cp = null;
@@ -33,6 +33,10 @@ Terminal.prototype.prompt = function() {
     var coloredPrompt = TermStyle.red(prompt);
     this._rl.setPrompt(coloredPrompt, prompt.length);
     this._rl.prompt();
+};
+
+Terminal.prototype.resize = function(width, height) {
+    this._term.resize(width, height);
 };
 
 module.exports = Terminal;
