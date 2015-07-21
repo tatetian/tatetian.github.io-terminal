@@ -16,14 +16,12 @@ var Terminal = function(parentEl, options) {
         term.write(options.welcome);
     this.prompt();
 
-    var self = this;
-    var shell = new Shell();
-    rl.on('line', function(line) {
-        var output = shell.run(line);
-        term.write(output);
-        self.prompt();
-    });
+    this._shell = new Shell();
 
+    var self = this;
+    rl.on('line', function(cmd) {
+        self.run(cmd);
+    });
 };
 
 Terminal.prototype.prompt = function() {
@@ -39,6 +37,12 @@ Terminal.prototype.prompt = function() {
 
 Terminal.prototype.resize = function(width, height) {
     this._term.resize(width, height);
+};
+
+Terminal.prototype.run = function(cmd) {
+    var output = this._shell.run(line);
+    this._term.write(output);
+    this.prompt();
 };
 
 module.exports = Terminal;
