@@ -12,6 +12,8 @@ var Terminal = function(parentEl, options) {
     var cp = null;
     var rl = this._rl = readline.createInterface(kb, term, cp, true);
 
+    if (options.welcome)
+        term.write(options.welcome);
     this.prompt();
 
     var self = this;

@@ -19,6 +19,7 @@ Shell.prototype.run = function(cmd) {
     case 'cd': return this._cd(args);
     case 'open': return this._open(args);
     case 'help': return this._help(args);
+    case '': return '';
     }
     return '-bash: ' + cmdName + ': command not found\n';
 };
