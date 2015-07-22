@@ -16,7 +16,10 @@ var parentEl = document.body;
 var term = new Terminal(parentEl, {
     cols: 80,
     rows: 30,
-    useStyle: true
+    useStyle: true,
+    prompt: 'test-machine:%s$ ',
+    welcome: 'This is a testing terminal\r\n'
 });
+term.run('ls');
 </script>
 </body>
