@@ -9,6 +9,7 @@ var util = require('util');
 var fs = require('./fs.js');
 var readline = require('./nodejs/readline.js');
 var termstyle = require('./termstyle.js');
+var extend = require('extend');
 
 function Shell(term, options) {
     this._term = term;
@@ -84,9 +85,9 @@ Shell.prototype._ls = function(args) {
 
     var inodes = ret.res;
     for (var i = 0; i < inodes.length; i++) {
-        this._writeLn(inodes[i].displayName(), {
-            "href": "#"
-        });
+        var inode = inodes[i];
+        var urlMeta = extend({"data-url": inode.url()}, this._options.urlMeta);
+        this._writeLn(inode.displayName(), urlMeta);
     }
 };
 

@@ -37,6 +37,10 @@ INode.prototype.displayName = function() {
     return this.name + (this.isDirectory() ? '/' : '');
 };
 
+INode.prototype.url = function() {
+    return this._url ? this._url : '';
+};
+
 INode.loadFromJson = function(json){
     var inode = new INode(json.name);
     // root node has empty name
@@ -44,6 +48,7 @@ INode.loadFromJson = function(json){
         inode.parent = inode;
     }
     inode._denyAccess = !!json.denyAccess;
+    inode._url = json.url;
 
     var children = json.nodes;
     if (!children) return inode;
@@ -111,8 +116,18 @@ var homeJson = {
         {
             "name": "posts",
             "nodes": [
-                {"name": "2015-01-05-why"},
-                {"name": "2015-07-05-ssh"}
+                {
+                    "name": "2015-01-15-why-should-i-or-any-tech-telant-start-blogging",
+                    "url": "/2015/01/15/why-should-i-or-any-tech-telant-start-blogging"
+                },
+                {
+                    "name": "2015-01-30-a-star-algorithm-saves-me-1-dollar-per-day",
+                    "url": "/2015/01/30/a-star-algorithm-saves-me-1-dollar-per-day"
+                },
+                {
+                    "name": "2015-06-15-ssh-essentials-in-three-steps",
+                    "url": "/2015/06/15/ssh-essentials-in-three-steps"
+                }
             ]
         },
         {

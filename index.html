@@ -23,7 +23,7 @@ var shell = new tateterm.Shell(term, {
     welcomeMsg: 'This is a testing terminal',
     urlMeta: {
         href: '#',
-        onclick: 'alert("click"); return false;'
+        onclick: 'loadContent(event); return false;'
     }
 });
 shell.run('ls');
