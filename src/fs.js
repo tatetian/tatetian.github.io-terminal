@@ -25,6 +25,10 @@ INode.prototype.isDirectory = function() {
     return !!this.children;
 };
 
+INode.prototype.displayName = function() {
+    return this.name + (this.isDirectory() ? '/' : '');
+};
+
 INode.loadFromJson = function(json){
     var inode = new INode(json.name);
 
@@ -120,16 +124,9 @@ fs.ls = function(dir) {
     var inode = getINodeByPath(dir);
     if (!inode) return {err: 'No such file or directory'};
 
-    var list = [];
-    if (!inode.isDirectory())
-        list.push(inode.name);
-    else {
-        var nodes = inode.children;
-        var numNodes = nodes.length;
-        for (var ni = 0; ni < numNodes; ni++)
-            list.push(nodes[ni].name);
-    }
-    return {res: list};
+    return {
+        res: inode.isDirectory() ? inode.children : inode
+    };
 };
 
 var cwdNode = rootNode;
@@ -141,7 +138,7 @@ fs.cwd = function(dir) {
 
         cwdNode = inode;
     }
-    return {res: cwdNode.toPath()};
+    return {res: cwdNode};
 };
 
 module.exports = fs;
