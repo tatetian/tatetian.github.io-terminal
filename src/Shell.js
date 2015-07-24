@@ -91,7 +91,7 @@ Shell.prototype._ls = function(args) {
 };
 
 Shell.prototype._cd = function(args) {
-    var ret = fs.cwd(args[0]);
+    var ret = fs.cd(args[0]);
     if (!ret.err) return;
 
     this._writeLn('cd: ' + args[0] + ': ' + ret.err);

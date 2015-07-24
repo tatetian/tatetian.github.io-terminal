@@ -9,7 +9,7 @@ var INode = function(name) {
 
 INode.prototype.toPath = function() {
     var path = '';
-    if (this.parent) path += this.parent.toPath();
+    if (!this.isRoot() && this.parent) path += this.parent.toPath();
     path += this.name;
     if (this.isDirectory()) path += '/';
     return path;
@@ -21,8 +21,16 @@ INode.prototype.addChild = function(child) {
     this.children.push(child);
 };
 
+INode.prototype.isRoot = function() {
+    return this === this.parent;
+};
+
 INode.prototype.isDirectory = function() {
     return !!this.children;
+};
+
+INode.prototype.isAccessible = function() {
+    return !this._denyAccess;
 };
 
 INode.prototype.displayName = function() {
@@ -31,6 +39,11 @@ INode.prototype.displayName = function() {
 
 INode.loadFromJson = function(json){
     var inode = new INode(json.name);
+    // root node has empty name
+    if (json.name === "") {
+        inode.parent = inode;
+    }
+    inode._denyAccess = !!json.denyAccess;
 
     var children = json.nodes;
     if (!children) return inode;
@@ -43,48 +56,24 @@ INode.loadFromJson = function(json){
     return inode;
 };
 
-// TODO: read the JSON from a separate file; can browserify support readFileSync?
-var nodesJson = {
-    "name": "~",
-    "nodes": [
-        {
-            "name": "posts",
-            "nodes": [
-                {"name": "2015-01-05-why"},
-                {"name": "2015-07-05-ssh"}
-            ]
-        },
-        {
-            "name": "projects",
-            "nodes": [
-                {"name": "pseudocode.js"},
-                {"name": "PaperClub"}
-            ]
-        },
-        {"name": "index.html"},
-        {"name": "about.html"}
-    ]
-};
-
-// var rootNode = INode.loadFromJson(JSON.parse(
-                    // require("fs").readFileSync(__dirname + '/fs.json', 'utf8')));
-var rootNode = INode.loadFromJson(nodesJson);
-var cwdNode = rootNode;
-
 function getINodeByPath(path) {
-    path = path.trim();
     if (!path || path === '') return null;
 
-    // only accept relative paths or absolute paths begin with '~'
-    var pathParts = path.split('/');
-    // absolute path doesn't make sense for our purpose
-    if (pathParts[0] === '')
-        return null;
+    // convert a path relative to home to an absolute path
+    if (path[0] === '~') {
+        // FIXME: hard-code home directory
+        path = '/home/tian' + path.slice(1);
+    }
+    // convert a relative path to an absolute path
+    if (path[0] !== '/') {
+        path = cwdNode.toPath() + path;
+    }
+    console.log('converted path = ' + path);
 
-    // if not start with '~', then the path is relative to cwd
-    var resNode = pathParts[0] !== '~' ? cwdNode : rootNode;
-    for (var pi = (pathParts[0] !== '~' ? 0 : 1);
-            pi < pathParts.length; pi++) {
+    var pathParts = path.split('/');
+
+    var resNode = rootNode;
+    for (var pi = 1; pi < pathParts.length; pi++) {
         var partName = pathParts[pi];
 
         if (partName === '' || partName === '.') {
@@ -94,8 +83,7 @@ function getINodeByPath(path) {
 
         if (partName === '..') {
             resNode = resNode.parent;
-            if (resNode === null) return null;
-            else continue;
+            continue;
         }
 
         var children = resNode.children;
@@ -116,28 +104,77 @@ function getINodeByPath(path) {
     return resNode;
 }
 
+// TODO: read the JSON from a separate file; can browserify support readFileSync?
+var homeJson = {
+    "name": "tatetian",
+    "nodes": [
+        {
+            "name": "posts",
+            "nodes": [
+                {"name": "2015-01-05-why"},
+                {"name": "2015-07-05-ssh"}
+            ]
+        },
+        {
+            "name": "projects",
+            "nodes": [
+                {"name": "pseudocode.js"},
+                {"name": "PaperClub"}
+            ]
+        },
+        {"name": "index.html"},
+        {"name": "about.html"}
+    ]
+};
+var nodesJson = {
+    "name": "", //root
+    "nodes": [
+        {
+            "name": "home",
+            "nodes": [
+                homeJson
+            ],
+            "denyAccess": true
+        }
+    ],
+    "denyAccess": true
+};
+
+// var rootNode = INode.loadFromJson(JSON.parse(
+                    // require("fs").readFileSync(__dirname + '/fs.json', 'utf8')));
+var rootNode = INode.loadFromJson(nodesJson);
+var cwdNode = getINodeByPath('/home/tatetian');
+
+
 var fs = {};
 
 fs.ls = function(dir) {
-    if (!dir || dir.trim() === '') dir = '.';
+    console.log('ls ' + dir);
+    if (!dir) dir = '.';
 
     var inode = getINodeByPath(dir);
     if (!inode) return {err: 'No such file or directory'};
+    if (!inode.isAccessible()) return {err: 'Permission denied'};
 
     return {
-        res: inode.isDirectory() ? inode.children : inode
+        res: inode.isDirectory() ? inode.children : [inode]
     };
 };
 
-var cwdNode = rootNode;
-fs.cwd = function(dir) {
-    if (dir) {
-        var inode = getINodeByPath(dir);
-        if (!inode) return {err: 'No such file or directory'};
-        if (!inode.isDirectory()) return {err: 'Not a directory'};
+fs.cd = function(dir) {
+    console.log('cd ' + dir);
+    if (!dir) dir = '~';
 
-        cwdNode = inode;
-    }
+    var inode = getINodeByPath(dir);
+    if (!inode) return {err: 'No such file or directory'};
+    if (!inode.isDirectory()) return {err: 'Not a directory'};
+    if (!inode.isAccessible()) return {err: 'Permission denied'};
+
+    cwdNode = inode;
+    return {res: cwdNode};
+};
+
+fs.cwd = function() {
     return {res: cwdNode};
 };
 
