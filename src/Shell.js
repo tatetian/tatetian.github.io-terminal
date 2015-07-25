@@ -28,11 +28,12 @@ function Shell(term, options) {
     rl.on('line', function(cmd) {
         self._realRun(cmd);
     });
+}
 
-    // Initial output
+Shell.prototype.init = function(cmd) {
     this._welcome();
     this._prompt();
-}
+};
 
 Shell.prototype.run = function(cmd) {
     this._writeLn(cmd);
@@ -86,7 +87,10 @@ Shell.prototype._ls = function(args) {
     var inodes = ret.res;
     for (var i = 0; i < inodes.length; i++) {
         var inode = inodes[i];
-        var urlMeta = extend({"data-url": inode.url()}, this._options.urlMeta);
+        var urlMeta = extend({
+            "data-url": inode.url(),
+            "data-path": inode.toPath(true),    // relative to home `~`
+        }, this._options.urlMeta);
         this._writeLn(inode.displayName(), urlMeta);
     }
 };

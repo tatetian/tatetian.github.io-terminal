@@ -7,9 +7,12 @@ var INode = function(name) {
     this.parent = null;
 };
 
-INode.prototype.toPath = function() {
+INode.prototype.toPath = function(showPathRelativeToHome) {
+    if (showPathRelativeToHome && this.isHome()) return '~/';
+
     var path = '';
-    if (!this.isRoot() && this.parent) path += this.parent.toPath();
+    if (!this.isRoot() && this.parent)
+        path += this.parent.toPath(showPathRelativeToHome);
     path += this.name;
     if (this.isDirectory()) path += '/';
     return path;
@@ -24,6 +27,11 @@ INode.prototype.addChild = function(child) {
 INode.prototype.isRoot = function() {
     return this === this.parent;
 };
+
+INode.prototype.isHome = function() {
+    return !!this._isHome;
+};
+
 
 INode.prototype.isDirectory = function() {
     return !!this.children;
@@ -67,7 +75,7 @@ function getINodeByPath(path) {
     // convert a path relative to home to an absolute path
     if (path[0] === '~') {
         // FIXME: hard-code home directory
-        path = '/home/tian' + path.slice(1);
+        path = '/home/tatetian' + path.slice(1);
     }
     // convert a relative path to an absolute path
     if (path[0] !== '/') {
@@ -112,33 +120,29 @@ function getINodeByPath(path) {
 // TODO: read the JSON from a separate file; can browserify support readFileSync?
 var homeJson = {
     "name": "tatetian",
+    "home": true,
     "nodes": [
         {
             "name": "posts",
             "nodes": [
                 {
-                    "name": "2015-01-15-why-should-i-or-any-tech-telant-start-blogging",
-                    "url": "/2015/01/15/why-should-i-or-any-tech-telant-start-blogging"
+                    "name": "SSH Essentials in Three Steps",
+                    "url": "/2015/06/15/ssh-essentials-in-three-steps"
                 },
                 {
-                    "name": "2015-01-30-a-star-algorithm-saves-me-1-dollar-per-day",
+                    "name": "A* Algorithm Saves Me 1 Dollar Per Day",
                     "url": "/2015/01/30/a-star-algorithm-saves-me-1-dollar-per-day"
                 },
                 {
-                    "name": "2015-06-15-ssh-essentials-in-three-steps",
-                    "url": "/2015/06/15/ssh-essentials-in-three-steps"
+                    "name": "Why Should I (or Any Tech Telant) Start Blogging",
+                    "url": "/2015/01/15/why-should-i-or-any-tech-telant-start-blogging"
                 }
             ]
         },
         {
-            "name": "projects",
-            "nodes": [
-                {"name": "pseudocode.js"},
-                {"name": "PaperClub"}
-            ]
+            "name": "index.html",
+            "url": "/"
         },
-        {"name": "index.html"},
-        {"name": "about.html"}
     ]
 };
 var nodesJson = {
@@ -159,7 +163,8 @@ var nodesJson = {
                     // require("fs").readFileSync(__dirname + '/fs.json', 'utf8')));
 var rootNode = INode.loadFromJson(nodesJson);
 var cwdNode = getINodeByPath('/home/tatetian');
-
+// set /home/tatetian as home directory of the user, i.e. '~'
+cwdNode._isHome = true;
 
 var fs = {};
 
