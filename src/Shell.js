@@ -35,13 +35,48 @@ Shell.prototype.init = function(cmd) {
     this._prompt();
 };
 
-Shell.prototype.run = function(cmd) {
-    this._writeLn(cmd);
-    this._realRun(cmd);
+Shell.prototype.run = function(cmdLine) {
+    this._writeLn(cmdLine);
+    this._realRun(cmdLine);
 };
 
-Shell.prototype._realRun = function(cmd) {
-    var args = cmd.trim().split(' ');
+Shell.prototype._realRun = function(cmdLine) {
+    // parse command like `cd posts && ls`
+    // we assume `&&` can not be part of a file path or arguments
+    var subCmds = cmdLine.split('&&');
+    for (var ci = 0; ci < subCmds.length; ci++) {
+        this._realRunOne(subCmds[ci]);
+    }
+    this._prompt();
+};
+
+// Handle escaped whitespace properly
+//  e.g. `  ls  file\ name\ with\ space  ` --> ['ls', 'file name with space']
+Shell.prototype._cmdTokenize = function(cmd) {
+    var res = [];
+    var begin = 0, end = 0, len = cmd.length;
+    while (begin < len) {
+        // skip util the first non-whitespace character
+        while (begin < len && cmd[begin] === ' ') begin++;
+        if (begin === len) break;
+
+        // next util the first non-escaped whitespace
+        end = begin + 1;
+        while (end < len && (cmd[end] !== ' ' || cmd[end - 1] === '\\')) end++;
+
+        var tokenWithEscapedWhiteSpace = cmd.substring(begin, end);
+        var token = tokenWithEscapedWhiteSpace.replace(/\\ /g, ' ');
+        console.debug(tokenWithEscapedWhiteSpace + '|' + token);
+        res.push(token);
+
+        // search the next token from
+        begin = end;
+    }
+    return res;
+};
+
+Shell.prototype._realRunOne = function(cmd) {
+    var args = this._cmdTokenize(cmd);
     var cmdName = args[0];
     args = args.slice(1);
     switch(cmdName) {
@@ -54,7 +89,6 @@ Shell.prototype._realRun = function(cmd) {
     default:
         this._writeLn('-bash: ' + cmdName + ': command not found');
     }
-    this._prompt();
 };
 
 Shell.prototype._writeLn = function(data, urlMeta) {
