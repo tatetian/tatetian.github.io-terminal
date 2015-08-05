@@ -18,13 +18,16 @@ function Shell(term, options) {
     this._options.promptTemplate = this._options.promptTemplate || 'shell:%s> ';
     this._options.urlMeta = this._options.urlMeta || null;
 
-    var completer = null;
+    var self = this;
+
+    var completer = function(line) {
+        return self._complete(line);
+    };
     var rl = this._rl = readline.createInterface(term.keyboard,
                                                  term.output,
                                                  completer,
                                                  true);
 
-    var self = this;
     rl.on('line', function(cmd) {
         self._realRun(cmd);
     });
@@ -50,6 +53,102 @@ Shell.prototype._realRun = function(cmdLine) {
     this._prompt();
 };
 
+Shell.prototype._realRunOne = function(cmd) {
+    var args = this._cmdTokenize(cmd);
+    var cmdName = args[0];
+    args = args.slice(1);
+    switch(cmdName) {
+    case 'cd': this._cd(args); break;
+    case 'help': this._help(args); break;
+    case 'ls':  this._ls(args); break;
+    case 'open':  this._open(args); break;
+    case 'welcome':  this._welcome(args); break;
+    case '':  break;
+    default:
+        this._writeLn('-bash: ' + cmdName + ': command not found');
+    }
+};
+
+/**
+ * Give hints to incomplete command
+ *
+ * Desirable behavior by examples:
+ * 1)
+ *  $ l<tab>
+ *  ==>
+ *  $ ls <cursor>                 // insert an extra whitespace automatically
+ *
+ * 2)
+ *  $ ls post<tab>
+ *  ==>
+ *  $ ls posts/<cursor>
+ *
+ * 3)
+ *  $ ls i<tab>
+ *  ==>
+ *  $ ls index.html<cursor>       // as we don't have multi-argument command
+ *                                // there is no point in automatically inserting
+ *                                // an extra whitespace at the end
+ *
+ * 4)
+ *  $ non-existing-command<tab>
+ *  ==>
+ *  $ non-existing-command<cursor>
+ *
+ *
+ * 5)
+ *  $ ls ma<tab>
+ *  match1  match2  match3
+ *  $ ls ma<tab>
+ *
+ * The return values of this function are as readline module of Node.js expects.
+ **/
+Shell.prototype._complete = function(cmdLine) {
+    var subCmds = cmdLine.split('&&');
+    var lastCmd = subCmds[subCmds.length - 1];
+    var tokens = this._cmdTokenize(lastCmd);
+
+    // we assume the first token is command name, the rest are file paths
+    var isCmd = tokens.length <= 1;
+
+    var res;
+    if (isCmd) {
+        var incompleteCmd = tokens[0] || '';
+        var allCmds = ['cd', 'cd2', 'help', 'ls', 'open', 'welcome'];
+        var possibleCmds = allCmds.filter(function(cmd) {
+            // prefix match
+            return cmd.indexOf(incompleteCmd) === 0;
+        });
+        // insert an whitespace at the end
+        if (possibleCmds.length === 1)
+            possibleCmds[0] = possibleCmds[0] + ' ';
+
+        res = [possibleCmds, incompleteCmd];
+    }
+    else {
+        var incompletePath = tokens[tokens.length - 1];
+        var possiblePaths = fs.getINodesByPrefix(incompletePath);
+
+        if (possiblePaths.length === 1) {
+            possiblePaths[0] = possiblePaths[0].replace(/ /g, '\\ ');
+        }
+
+        var pathTail = '';
+        if (possiblePaths.length > 0) {
+            var lastSeperatorPos = incompletePath.lastIndexOf('/');
+            if (lastSeperatorPos < 0)
+                pathTail = incompletePath;
+            else {
+                pathTail = incompletePath.slice(lastSeperatorPos + 1);
+            }
+        }
+        pathTail = pathTail.replace(/ /g, '\\ ');
+        res = [possiblePaths, pathTail];
+    }
+    console.log(res[0] + ':' + res[1]);
+    return res;
+};
+
 // Handle escaped whitespace properly
 //  e.g. `  ls  file\ name\ with\ space  ` --> ['ls', 'file name with space']
 Shell.prototype._cmdTokenize = function(cmd) {
@@ -73,22 +172,6 @@ Shell.prototype._cmdTokenize = function(cmd) {
         begin = end;
     }
     return res;
-};
-
-Shell.prototype._realRunOne = function(cmd) {
-    var args = this._cmdTokenize(cmd);
-    var cmdName = args[0];
-    args = args.slice(1);
-    switch(cmdName) {
-    case 'cd': this._cd(args); break;
-    case 'help': this._help(args); break;
-    case 'ls':  this._ls(args); break;
-    case 'open':  this._open(args); break;
-    case 'welcome':  this._welcome(args); break;
-    case '':  break;
-    default:
-        this._writeLn('-bash: ' + cmdName + ': command not found');
-    }
 };
 
 Shell.prototype._writeLn = function(data, urlMeta) {

@@ -81,7 +81,6 @@ function getINodeByPath(path) {
     if (path[0] !== '/') {
         path = cwdNode.toPath() + path;
     }
-    console.log('converted path = ' + path);
 
     var pathParts = path.split('/');
 
@@ -169,7 +168,6 @@ cwdNode._isHome = true;
 var fs = {};
 
 fs.ls = function(dir) {
-    console.log('ls ' + dir);
     if (!dir) dir = '.';
 
     var inode = getINodeByPath(dir);
@@ -182,7 +180,6 @@ fs.ls = function(dir) {
 };
 
 fs.cd = function(dir) {
-    console.log('cd ' + dir);
     if (!dir) dir = '~';
 
     var inode = getINodeByPath(dir);
@@ -196,6 +193,72 @@ fs.cd = function(dir) {
 
 fs.cwd = function() {
     return {res: cwdNode};
+};
+
+fs.getINodesByPrefix = function(partialPath) {
+    if (!partialPath || partialPath === '') return null;
+
+    // convert a path relative to home to an absolute path
+    if (partialPath[0] === '~') {
+        // FIXME: hard-code home directory
+        partialPath = '/home/tatetian' + partialPath.slice(1);
+    }
+    // convert a relative path to an absolute path
+    if (partialPath[0] !== '/') {
+        partialPath = cwdNode.toPath() + partialPath;
+    }
+
+    var resNodes = [];
+
+    var pathParts = partialPath.split('/');
+    var numParts = pathParts.length;
+
+    var dirNode = rootNode;
+    for (var pi = 1; pi < numParts; pi++) {
+        var partName = pathParts[pi];
+
+        if (partName === '') {
+            if (!dirNode.isDirectory()) // invalid path
+                return null;
+
+            // For commands like `ls posts/`, we want to return all files in
+            // the directory. So we should go on iterating the child nodes
+            // of `dirNode` if this is the last part.
+            if (pi !== numParts - 1) continue;
+        }
+
+        if (partName === '.') {
+            if (!dirNode.isDirectory()) // invalid path
+                return null;
+            continue;
+        }
+
+        if (partName === '..') {
+            dirNode = dirNode.parent;
+            continue;
+        }
+
+        var children = dirNode.children;
+        if (!children) return null;
+        var numChildren = children.length;
+        for (var ci = 0; ci < numChildren; ci++) {
+            var node = children[ci];
+            // found the next node
+            if (pi !== numParts - 1 && partName === node.name) {
+                dirNode = node;
+                break;
+            }
+            // found the last node which only partically match
+            else if (pi === numParts - 1 && node.name.indexOf(partName) === 0) {
+                resNodes.push(node.name + (node.isDirectory() ? '/' : ''));
+            }
+        }
+
+        // the path is not valid
+        if (pi !== numParts - 1 && ci === numChildren) return null;
+    }
+    console.dir(resNodes);
+    return resNodes;
 };
 
 module.exports = fs;

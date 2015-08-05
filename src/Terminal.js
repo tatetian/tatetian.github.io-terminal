@@ -14,6 +14,8 @@ var Terminal = function(parentEl, options) {
     var term = this.output = this._term = new RealTerminal(options);
     var kb = this.keyboard = new TermKeyboard(term);
     term.open(parentEl);
+    // readline expects its ouput has an attribute `columns`
+    term.columns = term.cols;
 };
 util.inherits(Terminal, EE);
 
@@ -24,6 +26,8 @@ Terminal.prototype.__defineGetter__('columns', function() {
 
 Terminal.prototype.resize = function(cols, rows) {
     this._term.resize(cols, rows);
+    // keep `columns` update to date
+    this._term.columns = this._term.cols;
     // readline.js needs to know when output resizes
     this.emit('resize');
 };

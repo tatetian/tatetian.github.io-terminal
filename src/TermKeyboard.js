@@ -24,6 +24,7 @@ var TermKeyboard = function(term) {
         var name;
         switch(ev.keyCode) {
         case 8: name = 'backspace'; break;
+        case 9: name = 'tab'; break;
         case 13: name = 'enter'; break;
         case 37: name = 'left'; break;
         case 38: name = 'up'; break;
