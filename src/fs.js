@@ -196,6 +196,8 @@ fs.cwd = function() {
     return {res: cwdNode};
 };
 
+fs.getINodeByPath = getINodeByPath;
+
 fs.getINodesByPrefix = function(partialPath) {
     if (!partialPath || partialPath === '') return null;
     var pathParts = partialPath.split('/');

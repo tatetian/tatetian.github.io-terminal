@@ -5,6 +5,7 @@
  *  `open [file]`  -- open a file
  *  `help`         -- show this list
  * */
+var EE = require('events').EventEmitter;
 var util = require('util');
 var fs = require('./fs.js');
 var readline = require('./nodejs/readline.js');
@@ -12,13 +13,34 @@ var termstyle = require('./termstyle.js');
 var extend = require('extend');
 
 function Shell(term, options) {
+    EE.call(this);
+
     this._term = term;
     this._options = options || {};
     this._options.welcomeMsg = this._options.welcomeMsg || '';
     this._options.promptTemplate = this._options.promptTemplate || 'shell:%s> ';
-    this._options.urlMeta = this._options.urlMeta || null;
 
     var self = this;
+
+    // handle URLs in terminal
+    this._options.urlMeta = extend({}, {
+                               href: '#',
+                               onclick: 'return __ShellUrlOnClick(event);'
+                           }, this._options.urlMeta);
+    global.__ShellUrlOnClick = function(e) {
+        // prevent the default behaviour of browser when clicking <a> tag
+        e.preventDefault();
+        var atag = (e.target) ? e.target : e.srcElement;
+        var url = atag.dataset.url;
+        if (url) {
+            self.emit('loadurl', url);
+        }
+        else {
+            var path = atag.dataset.path;
+            self.run('cd ' + path + ' && ls');
+        }
+        return false;
+    };
 
     var completer = function(line) {
         return self._complete(line);
@@ -32,6 +54,7 @@ function Shell(term, options) {
         self._realRun(cmd);
     });
 }
+util.inherits(Shell, EE);
 
 Shell.prototype.init = function(cmd) {
     this._welcome();
@@ -236,6 +259,29 @@ Shell.prototype._cd = function(args) {
 };
 
 Shell.prototype._open = function(args) {
+    if (args.length === 0) {
+        this._writeLn('Usage: open <path>');
+        return;
+    }
+
+    var path = args[0];
+    var inode = fs.getINodeByPath(path);
+    if (!inode) {
+        this._writeLn('open: ' + path + ': No such file or directory');
+        return;
+    }
+    if (!inode.isAccessible()) {
+        this._writeLn('open: ' + path +  ': Permission denied');
+        return;
+    }
+
+    if (inode.isDirectory()) {
+        this._cd([path]);
+        this._ls([]);
+    }
+    else {
+        this.emit('loadurl', inode.url());
+    }
 };
 
 Shell.prototype._welcome = function() {

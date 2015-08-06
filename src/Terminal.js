@@ -11,6 +11,8 @@ var TermKeyboard = require('./TermKeyboard.js');
  *  options - options for terminal
  * */
 var Terminal = function(parentEl, options) {
+    EE.call(this);
+
     var term = this.output = this._term = new RealTerminal(options);
     var kb = this.keyboard = new TermKeyboard(term);
     term.open(parentEl);

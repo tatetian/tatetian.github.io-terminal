@@ -20,12 +20,11 @@ var term = new tateterm.Terminal(parentEl, {
 });
 var shell = new tateterm.Shell(term, {
     promptTemplate: '%s$ ',
-    welcomeMsg: 'This is a testing terminal',
-    urlMeta: {
-        href: '#',
-        onclick: 'return linkHandler(event);'
-    }
+    welcomeMsg: 'This is a testing terminal'
 });
 shell.run('ls');
+shell.on('loadurl', function(url) {
+    console.log(url);
+});
 </script>
 </body>
