@@ -161,9 +161,10 @@ var nodesJson = {
 // var rootNode = INode.loadFromJson(JSON.parse(
                     // require("fs").readFileSync(__dirname + '/fs.json', 'utf8')));
 var rootNode = INode.loadFromJson(nodesJson);
-var cwdNode = getINodeByPath('/home/tatetian');
+var homeNode = getINodeByPath('/home/tatetian');
+homeNode._isHome = true;
+var cwdNode = homeNode;
 // set /home/tatetian as home directory of the user, i.e. '~'
-cwdNode._isHome = true;
 
 var fs = {};
 
@@ -197,24 +198,19 @@ fs.cwd = function() {
 
 fs.getINodesByPrefix = function(partialPath) {
     if (!partialPath || partialPath === '') return null;
+    var pathParts = partialPath.split('/');
 
-    // convert a path relative to home to an absolute path
-    if (partialPath[0] === '~') {
-        // FIXME: hard-code home directory
-        partialPath = '/home/tatetian' + partialPath.slice(1);
-    }
-    // convert a relative path to an absolute path
-    if (partialPath[0] !== '/') {
-        partialPath = cwdNode.toPath() + partialPath;
+    var dirNode, skipFirst;
+    switch(pathParts[0]) {
+    case '~': dirNode = homeNode; skipFirst = true; break;
+    case '': dirNode = rootNode; skipFirst = true; break;
+    default: dirNode = cwdNode; skipFirst = false;
     }
 
     var resNodes = [];
 
-    var pathParts = partialPath.split('/');
     var numParts = pathParts.length;
-
-    var dirNode = rootNode;
-    for (var pi = 1; pi < numParts; pi++) {
+    for (var pi = skipFirst ? 1 : 0; pi < numParts; pi++) {
         var partName = pathParts[pi];
 
         if (partName === '') {

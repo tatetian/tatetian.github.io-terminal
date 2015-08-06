@@ -410,7 +410,9 @@ Interface.prototype._tabComplete = function() {
             group.push(c);
           }
         }
-        handleGroup(self, group, width, maxColumns);
+        // Modified by tatetian
+        // Elimate the extra empty line after completions list
+        handleGroup(self, group, width, maxColumns, true);
 
         // If there is a common prefix to all matches, then apply that
         // portion.
@@ -427,7 +429,7 @@ Interface.prototype._tabComplete = function() {
 };
 
 // this = Interface instance
-function handleGroup(self, group, width, maxColumns) {
+function handleGroup(self, group, width, maxColumns, noEnter) {
   if (group.length == 0) {
     return;
   }
@@ -449,7 +451,9 @@ function handleGroup(self, group, width, maxColumns) {
     }
     self._writeToOutput('\r\n');
   }
-  self._writeToOutput('\r\n');
+  // Added by tatetian
+  if (!noEnter)
+    self._writeToOutput('\r\n');
 }
 
 function commonPrefix(strings) {

@@ -1,4 +1,4 @@
-.PHONY: lint build clean
+.PHONY: watch clean
 
 build: lint build/tateterm.min.js
 
@@ -12,7 +12,7 @@ clean:
 lint: index.js $(wildcard src/*.js)
 	./node_modules/.bin/jshint $^
 
-build/tateterm.js: index.js $(wildcard src/*.js) $(wildcard lib/*.js)
+build/tateterm.js: index.js $(wildcard src/*.js)
 	./node_modules/.bin/browserify  $< --standalone tateterm -o $@
 
 build/tateterm.min.js: build/tateterm.js

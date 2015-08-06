@@ -108,13 +108,24 @@ Shell.prototype._complete = function(cmdLine) {
     var lastCmd = subCmds[subCmds.length - 1];
     var tokens = this._cmdTokenize(lastCmd);
 
-    // we assume the first token is command name, the rest are file paths
+    // A trailing whitespace means shows current directory
+    // e.g. ls <tab>
+    if (tokens.length > 0 && cmdLine.endsWith(' ') && !cmdLine.endsWith('\\ ')) {
+        var cwdNode = fs.cwd().res;
+        var allSubFiles = cwdNode.children.map(function(inode) {
+            return inode.displayName();
+        });
+        return [allSubFiles, ''];
+    }
+
+    // Are we autocompleting a command or a file path?
+    // The first token should be command name, the rest are file paths.
     var isCmd = tokens.length <= 1;
 
     var res;
     if (isCmd) {
         var incompleteCmd = tokens[0] || '';
-        var allCmds = ['cd', 'cd2', 'help', 'ls', 'open', 'welcome'];
+        var allCmds = ['cd', 'help', 'ls', 'open', 'welcome'];
         var possibleCmds = allCmds.filter(function(cmd) {
             // prefix match
             return cmd.indexOf(incompleteCmd) === 0;
@@ -129,6 +140,11 @@ Shell.prototype._complete = function(cmdLine) {
         var incompletePath = tokens[tokens.length - 1];
         var possiblePaths = fs.getINodesByPrefix(incompletePath);
 
+        // no matches
+        if (!possiblePaths || possiblePaths.length === 0)
+            return [null, null];
+
+        // for a single match, we have to escape its whitespace
         if (possiblePaths.length === 1) {
             possiblePaths[0] = possiblePaths[0].replace(/ /g, '\\ ');
         }
