@@ -126,14 +126,18 @@ var homeJson = {
             "url": "/README"
         },
         {
-            "name": "index.html",
+            "name": "index",
             "url": "/"
+        },
+        {
+            "name": "projects",
+            "url": "/projects"
         },
         {
             "name": "posts",
             "nodes": [
                 {
-                    "name": "2016-01-25 File I/O Inside Intel SGX Enclave",
+                    "name": "2016-01-25 File IO Inside Intel SGX Enclave",
                     "url": "/2016/01/25/file-io-inside-intel-sgx-enclave"
                 },
                 {
@@ -147,6 +151,14 @@ var homeJson = {
                 {
                     "name": "2015-01-15 Why Should I (or Any Tech Telant) Start Blogging",
                     "url": "/2015/01/15/why-should-i-or-any-tech-telant-start-blogging"
+                },
+                {
+                    "name": "test",
+                    "url": "/README"
+                },
+                {
+                    "name": "test two",
+                    "url": "/README"
                 }
             ]
         }
