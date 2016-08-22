@@ -1,0 +1,3 @@
+[submodule "lib/xterm.js"]
+	path = lib/xterm.js
+	url = https://github.com/tatetian/xterm.js

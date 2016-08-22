@@ -151,14 +151,6 @@ var homeJson = {
                 {
                     "name": "2015-01-15 Why Should I (or Any Tech Telant) Start Blogging",
                     "url": "/2015/01/15/why-should-i-or-any-tech-telant-start-blogging"
-                },
-                {
-                    "name": "test",
-                    "url": "/README"
-                },
-                {
-                    "name": "test two",
-                    "url": "/README"
                 }
             ]
         }
