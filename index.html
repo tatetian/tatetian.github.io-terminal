@@ -5,17 +5,23 @@
     <script src="build/tateterm.js" type="text/javascript"></script>
     <title>Terminal Demo</title>
     <style media="screen" type="text/css">
-    body .terminal {
-        font-size: 14px;
+    #terminal-container {
+        font-size: 18px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
     }
     </style>
+    <link rel="stylesheet" href="lib/xterm.js/src/xterm.css" />
 </head>
 <body>
+<div id="terminal-container"></div>
 <script>
-var parentEl = document.body;
+var parentEl = document.getElementById("terminal-container");
 var term = new tateterm.Terminal(parentEl, {
-    cols: 60,
-    rows: 20,
+    cursorBlink: true,
     useStyle: true
 });
 var shell = new tateterm.Shell(term, {
@@ -23,8 +29,8 @@ var shell = new tateterm.Shell(term, {
     welcomeMsg: 'This is a testing terminal'
 });
 shell.run('ls');
-shell.on('loadurl', function(url) {
+/*shell.on('loadurl', function(url) {
     console.log(url);
-});
+});*/
 </script>
 </body>

@@ -6,13 +6,20 @@ build: lint build/tateterm.min.js
 watch: index.js $(wildcard src/*.js) $(wildcard lib/*.js)
 	./node_modules/.bin/watchify $< --standalone tateterm -o build/tateterm.js
 
+init:
+	git submodule init
+	cd lib/xterm.js/ && npm install
+
 clean:
 	rm -rf build/*
 
 lint: index.js $(wildcard src/*.js)
 	./node_modules/.bin/jshint $^
 
-build/tateterm.js: index.js $(wildcard src/*.js)
+xterm: lib/xterm.js/src/xterm.js lib/xterm.js/addons/fit/fit.js
+	cd lib/xterm.js/ && npm build
+
+build/tateterm.js: index.js $(wildcard src/*.js) xterm 
 	./node_modules/.bin/browserify  $< --standalone tateterm -o $@
 
 build/tateterm.min.js: build/tateterm.js

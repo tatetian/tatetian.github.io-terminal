@@ -27,7 +27,7 @@ function Shell(term, options) {
                                href: '#',
                                onclick: 'return __ShellUrlOnClick(event);'
                            }, this._options.urlMeta);
-    global.__ShellUrlOnClick = function(e) {
+    global.onPathClickedInTerminal = function(e) {
         // prevent the default behaviour of browser when clicking <a> tag
         e.preventDefault();
         var atag = (e.target) ? e.target : e.srcElement;
@@ -62,7 +62,7 @@ Shell.prototype.init = function(cmd) {
 };
 
 Shell.prototype.run = function(cmdLine) {
-    this._writeLn(cmdLine);
+    this._writeLine(cmdLine);
     this._realRun(cmdLine);
 };
 
@@ -88,7 +88,7 @@ Shell.prototype._realRunOne = function(cmd) {
     case 'welcome':  this._welcome(args); break;
     case '':  break;
     default:
-        this._writeLn('-bash: ' + cmdName + ': command not found');
+        this._writeLine('-bash: ' + cmdName + ': command not found');
     }
 };
 
@@ -213,12 +213,21 @@ Shell.prototype._cmdTokenize = function(cmd) {
     return res;
 };
 
-Shell.prototype._writeLn = function(data, urlMeta) {
-    var line = data + '\r\n';
-    if (!urlMeta)
-        this._term.write(line);
-    else
-        this._term.writeLink(line, urlMeta);
+Shell.prototype._writeLine = function(text) {
+    var line = (text || '') + '\r\n';
+    this._term.write(line);
+};
+
+Shell.prototype._writeInode = function(inode) {
+    this._term.writeWithinTag(inode.displayName(), {
+        "name": "a",
+        "attrs": {
+            "href": "#",
+            "data-path": inode.toPath(true),
+            "data-url": inode.url(),
+            "onclick": "return onPathClickedInTerminal(event)"
+        }
+    });
 };
 
 Shell.prototype._prompt = function() {
@@ -236,18 +245,15 @@ Shell.prototype._prompt = function() {
 Shell.prototype._ls = function(args) {
     var ret = fs.ls(args[0]);
     if (ret.err) {
-        this._writeLn('ls: ' + args[0] + ': ' + ret.err);
+        this._writeLine('ls: ' + args[0] + ': ' + ret.err);
         return;
     }
 
     var inodes = ret.res;
     for (var i = 0; i < inodes.length; i++) {
         var inode = inodes[i];
-        var urlMeta = extend({
-            "data-url": inode.url(),
-            "data-path": inode.toPath(true),    // relative to home `~`
-        }, this._options.urlMeta);
-        this._writeLn(inode.displayName(), urlMeta);
+        this._writeInode(inode);
+        this._writeLine();
     }
 };
 
@@ -255,23 +261,23 @@ Shell.prototype._cd = function(args) {
     var ret = fs.cd(args[0]);
     if (!ret.err) return;
 
-    this._writeLn('cd: ' + args[0] + ': ' + ret.err);
+    this._writeLine('cd: ' + args[0] + ': ' + ret.err);
 };
 
 Shell.prototype._open = function(args) {
     if (args.length === 0) {
-        this._writeLn('Usage: open <path>');
+        this._writeLine('Usage: open <path>');
         return;
     }
 
     var path = args[0];
     var inode = fs.getINodeByPath(path);
     if (!inode) {
-        this._writeLn('open: ' + path + ': No such file or directory');
+        this._writeLine('open: ' + path + ': No such file or directory');
         return;
     }
     if (!inode.isAccessible()) {
-        this._writeLn('open: ' + path +  ': Permission denied');
+        this._writeLine('open: ' + path +  ': Permission denied');
         return;
     }
 
@@ -286,7 +292,7 @@ Shell.prototype._open = function(args) {
 
 Shell.prototype._welcome = function() {
     if (this._options.welcomeMsg)
-        this._writeLn(this._options.welcomeMsg);
+        this._writeLine(this._options.welcomeMsg);
 };
 
 Shell.prototype._help = function(args) {
@@ -297,7 +303,7 @@ Shell.prototype._help = function(args) {
         '    `ls [file]`    -- list directory content\r\n' +
         '    `open [file]`  -- open a file\r\n' +
         '    `welcome`      -- show the welcome message';
-   this._writeLn(helpInfo);
+   this._writeLine(helpInfo);
 };
 
 module.exports = Shell;
