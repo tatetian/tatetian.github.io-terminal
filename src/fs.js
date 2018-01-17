@@ -137,6 +137,10 @@ var homeJson = {
             "name": "posts",
             "nodes": [
                 {
+                    "name": "2017-01-15 Understanding SGX Protected File System",
+                    "url": "/2017/01/15/understanding-sgx-protected-file-system"
+                },
+                {
                     "name": "2016-01-25 File IO Inside Intel SGX Enclave",
                     "url": "/2016/01/25/file-io-inside-intel-sgx-enclave"
                 },

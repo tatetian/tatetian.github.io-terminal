@@ -8,7 +8,9 @@ watch: index.js $(wildcard src/*.js) $(wildcard lib/*.js)
 
 init:
 	git submodule init
+	git submodule update
 	cd lib/xterm.js/ && npm install
+	mkdir build
 
 clean:
 	rm -rf build/*

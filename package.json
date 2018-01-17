@@ -14,7 +14,7 @@
     "clean-css": "~2.2.15",
     "extend": "^3.0.0",
     "jshint": "^2.5.6",
-    "uglify-js": "~2.4.15",
+    "uglify-js": "~>2.6.0",
     "watchify": "~2.4.0"
   },
   "author": "Tate, Tian Hongliang",
